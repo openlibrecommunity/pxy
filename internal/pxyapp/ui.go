@@ -1,8 +1,4 @@
-package main
-
-import "html/template"
-
-var indexTmpl = template.Must(template.New("index").Parse(indexHTML)) //nolint:gochecknoglobals // immutable template
+package pxyapp
 
 const indexHTML = `<!doctype html>
 <html lang="en">

@@ -1,9 +1,5 @@
 AGENTS.md
 .env
 .domains
-log
-pxy
 log/
 bin/
-.env
-.domains

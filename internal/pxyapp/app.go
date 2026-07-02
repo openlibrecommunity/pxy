@@ -1,4 +1,4 @@
-package main
+package pxyapp
 
 import (
 	"bytes"
@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html/template"
 	"io"
 	"log/slog"
 	"net"
@@ -85,14 +86,7 @@ type cfError struct {
 	Message string `json:"message"`
 }
 
-func main() {
-	if err := run(); err != nil {
-		slog.Error("fatal", "err", err)
-		os.Exit(1)
-	}
-}
-
-func run() error {
+func Run() error {
 	domains, err := loadDomains(".env", ".domains")
 	if err != nil {
 		return err
@@ -401,3 +395,5 @@ func envOr(key, fallback string) string {
 	}
 	return fallback
 }
+
+var indexTmpl = template.Must(template.New("index").Parse(indexHTML)) //nolint:gochecknoglobals // immutable template
