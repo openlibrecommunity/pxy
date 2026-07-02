@@ -2,3 +2,4 @@ AGENTS.md
 log/
 bin/
 .env
+.domains
