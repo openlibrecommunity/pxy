@@ -214,7 +214,7 @@ func awgBlock() string {
 	return `
 log 'pxy: install amneziawg'
 if ! command -v awg >/dev/null; then
-  pkg gpg sudo ethtool build-essential dkms dpkg-dev qrencode wireguard-tools linux-headers-$(uname -r)
+  pkg gpg sudo ethtool build-essential dkms dpkg-dev qrencode wireguard-tools linux-headers-amd64
   curl -fsSL 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x75C9DD72C799870E310542E24166F2C257290828' | gpg --dearmor >/usr/share/keyrings/amnezia.gpg
   echo 'deb [signed-by=/usr/share/keyrings/amnezia.gpg] https://ppa.launchpadcontent.net/amnezia/ppa/ubuntu noble main' >/etc/apt/sources.list.d/amnezia.list
   apt-get update -y
