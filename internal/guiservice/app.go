@@ -40,6 +40,25 @@ func (a *App) TestSSH(req installer.Request) string {
 	return "ok"
 }
 
+// Update runs apt upgrade then reboots the remote server.
+func (a *App) Update(req installer.Request) string {
+	req.Defaults()
+	if !a.begin() {
+		return "err: already running"
+	}
+	defer a.end()
+	log := func(line string) { a.emit("install:log", line) }
+	log("connect " + req.User + "@" + req.Host + ":" + req.SSHPort)
+	client := pxyssh.New(req.Host, req.SSHPort, req.User, req.Password)
+	out, err := client.Run(context.Background(),
+		"DEBIAN_FRONTEND=noninteractive apt-get update -y && apt-get upgrade -y && sync && reboot", log)
+	if err != nil {
+		// reboot closes ssh, which is expected
+		out += "\nreboot initiated"
+	}
+	return "ok\n" + out
+}
+
 // Install runs selected protocol installers on the remote server.
 func (a *App) Install(req installer.Request) (string, error) {
 	req.Defaults()

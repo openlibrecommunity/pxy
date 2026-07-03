@@ -278,7 +278,8 @@ AllowedIPs = 0.0.0.0/0, ::/0
 PersistentKeepalive = 33
 EOF
 sysctl -w net.ipv4.ip_forward=1
-systemctl enable --now awg-quick@awg0
+systemctl enable awg-quick@awg0
+systemctl restart awg-quick@awg0 || log 'pxy: awg needs reboot - module built for newer kernel'
 res 'amneziawg config:'
 cat /root/pxy/awg/pxy_phone.conf >> /root/pxy/result.txt
 `

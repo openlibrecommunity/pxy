@@ -1,5 +1,5 @@
 import './style.css'
-import { Install, TestSSH } from '../wailsjs/go/guiservice/App'
+import { Install, TestSSH, Update } from '../wailsjs/go/guiservice/App'
 import { EventsOn } from '../wailsjs/runtime/runtime'
 
 const app = document.querySelector('#app')
@@ -29,6 +29,7 @@ app.innerHTML = `
       <label>email for acme<input id="email" placeholder="admin@example.com"></label>
       <label>sni / mask host<input id="sni" value="www.microsoft.com"></label>
       <button type="button" id="test">test ssh</button>
+      <button type="button" id="update" disabled>update server (need restart)</button>
       <h2>2. protocols</h2>
       <div class="checks">
         <label><input type="checkbox" id="vless" checked> vless reality xhttp</label>
@@ -71,6 +72,7 @@ const ids = (name) => document.getElementById(name)
 const logs = ids('logs')
 const result = ids('result')
 const state = ids('state')
+let phase = 'init'
 
 function theme(t) {
   document.documentElement.dataset.theme = t
@@ -124,9 +126,30 @@ function req() {
   }
 }
 
+ids('install').disabled = true
+
 ids('test').onclick = async () => {
+  ids('update').disabled = true
+  ids('install').disabled = true
   state.textContent = 'testing ssh...'
   state.textContent = await TestSSH(req())
+  if (state.textContent === 'ok') {
+    if (phase === 'updated') {
+      ids('install').disabled = false
+    } else {
+      ids('update').disabled = false
+    }
+  }
+}
+
+ids('update').onclick = async () => {
+  ids('update').disabled = true
+  logs.textContent = ''
+  state.textContent = 'updating & rebooting...'
+  const r = await Update(req())
+  logs.textContent += r + '\n'
+  phase = 'updated'
+  state.textContent = 'rebooted, test ssh to continue'
 }
 
 ids('form').onsubmit = async (e) => {
