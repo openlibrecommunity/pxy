@@ -35,17 +35,17 @@
  golang.org/x/crypto/ssh - remote install
 
 
-protocols: 
-```
-vless reality xhttp
 
-hysteria2
+**protocols:** 
 
-amneziawg 
+- [X]  vless reality xhttp
 
-mieru 
+- [X] hysteria2
 
-naive
+- [X] amneziawg 
 
-olcrtc
-```
+- [X] mieru 
+
+- [X] naive
+
+- [X] olcrtc
