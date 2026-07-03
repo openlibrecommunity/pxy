@@ -18,7 +18,11 @@ jobs:
         with:
           go-version: '1.26'
           check-latest: true
+      - name: install_wails
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+      - name: init_wails
+        run: wails build
       - name: build
-        run: go build -o pxy ./...
+        run: go build ./...
       - name: test
         run: go test -race ./...
