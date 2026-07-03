@@ -2,6 +2,8 @@
 
 <div align="center">
 
+[![ci](https://github.com/openlibrecommunity/pxy/actions/workflows/ci.yml/badge.svg)](https://github.com/openlibrecommunity/pxy/actions/workflows/ci.yml)
+
 # **pxy - one click 6 proxy installer + free domains**
 
 ### **how to start**
