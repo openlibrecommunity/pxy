@@ -356,9 +356,12 @@ fi
 export PATH="$HOME/go/bin:$PATH"
 go install github.com/magefile/mage@latest
 mkdir -p /root/pj /root/.config/olcrtc
-if [ ! -d /root/pj/olcrtc/.git ]; then git clone https://github.com/openlibrecommunity/olcrtc /root/pj/olcrtc; fi
-cd /root/pj/olcrtc
-git pull --recurse-submodules || true
+if [ ! -d /root/pj/olcrtc/.git ]; then
+  git clone https://github.com/openlibrecommunity/olcrtc /root/pj/olcrtc
+  cd /root/pj/olcrtc
+else
+  cd /root/pj/olcrtc && git pull --recurse-submodules 2>/dev/null || true
+fi
 /root/go/bin/mage build
 OLC_KEY=$(randhex 32)
 cat > /root/.config/olcrtc/server.yaml <<EOF
