@@ -134,6 +134,7 @@ log(){ printf '%%s\n' "$*"; }
 res(){ printf '%%s\n' "$*" >> /root/pxy/result.txt; }
 randhex(){ openssl rand -hex "$1"; }
 pkg(){ apt-get update -y; apt-get install -y "$@"; }
+rm -f /etc/apt/sources.list.d/amnezia.list /etc/apt/sources.list.d/testing.list /usr/share/keyrings/amnezia.gpg
 log 'pxy: base packages'
 pkg curl wget unzip openssl git ca-certificates python3
 `, shq(req.Domain), shq(req.Host), shq(req.Email), shq(req.SNI), shq(req.Ports.VLESS), shq(req.Ports.Hysteria2), shq(req.Ports.Mieru), shq(req.Ports.AmneziaWG), shq(req.Ports.Naive), shq(req.OLCRTC.Provider), shq(req.OLCRTC.Transport), shq(req.OLCRTC.Room))
