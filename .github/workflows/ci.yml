@@ -18,10 +18,12 @@ jobs:
         with:
           go-version: '1.26'
           check-latest: true
-      - name: install_wails
+      - name: install deps
+        run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libglib2.0-dev libwebkit2gtk-4.1-dev 
+      - name: install wails
         run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
-      - name: init_wails
-        run: wails build
+      - name: build wails
+        run: wails build -tags webkit2_41
       - name: build
         run: go build ./...
       - name: test
