@@ -18,72 +18,86 @@ app.innerHTML = `
       <a href="https://zarazaex.xyz">zarazaex</a>
     </nav>
   </header>
-  <section class="grid">
-    <form id="form" class="card">
-      <h2>1. server</h2>
-      <label>ip / host<input id="host" placeholder="2.26.103.97" required></label>
-      <label>ssh port<input id="sshPort" value="22"></label>
-      <label>ssh user<input id="user" value="root"></label>
-      <label>ssh password<input id="password" type="password" required></label>
-      <label>domain from pxy<input id="domain" placeholder="u68f32da.ikill.baby" required></label>
-      <label>email for acme<input id="email" placeholder="admin@example.com"></label>
-      <label>sni / mask host<input id="sni" value="www.microsoft.com"></label>
-      <button type="button" id="test">test ssh</button>
-      <button type="button" id="update" disabled>update server (need restart)</button>
-      <h2>2. protocols</h2>
-      <div class="checks">
-        <label><input type="checkbox" id="vless" checked> vless reality xhttp</label>
-        <label><input type="checkbox" id="hysteria2" checked> hysteria2 gecko</label>
-        <label><input type="checkbox" id="amneziawg" checked> amneziawg</label>
-        <label><input type="checkbox" id="mieru"> mieru</label>
-        <label><input type="checkbox" id="naive"> naiveproxy</label>
-        <label><input type="checkbox" id="olcrtc"> olcrtc</label>
-      </div>
-      <h2>3. ports</h2>
-      <div class="ports">
-        <label>vless<input id="portVless" value="443"></label>
-        <label>hy2<input id="portHy2" value="30000"></label>
-        <label>awg<input id="portAwg" value="39743"></label>
-        <label>mieru<input id="portMieru" value="444-448"></label>
-        <label>naive<input id="portNaive" value="8443"></label>
-      </div>
-      <details>
-        <summary>olcrtc cfg</summary>
-        <label>provider<input id="olcProvider" value="jitsi"></label>
-        <label>transport<input id="olcTransport" value="datachannel"></label>
-        <label>room<input id="olcRoom" placeholder="https://meet.egovm.ru/room"></label>
-      </details>
-      <button type="submit" id="install">install selected</button>
-    </form>
-    <section class="card side">
-      <h2>status</h2>
-      <div id="state" class="state">idle</div>
-      <h2>logs</h2>
-      <pre id="logs"></pre>
-    </section>
+  <section class="panel panel-server">
+    <h2>1. server</h2>
+    <label>ip / host<input id="host" placeholder="2.26.103.97"></label>
+    <label>ssh port<input id="sshPort" value="22"></label>
+    <label>ssh user<input id="user" value="root"></label>
+    <label>ssh password<input id="password" type="password"></label>
+    <label>domain from pxy<input id="domain" placeholder="u68f32da.ikill.baby"></label>
+    <label>email for acme<input id="email" placeholder="admin@example.com"></label>
+    <label>sni / mask host<input id="sni" value="www.microsoft.com"></label>
+    <div class="btn-row">
+      <button type="button" id="test" disabled>test ssh</button>
+      <button type="button" id="update" disabled>update (need restart)</button>
+    </div>
   </section>
-  <section class="card result">
-    <h2>client data</h2>
+  <section class="panel panel-proto">
+    <h2>2. protocols</h2>
+    <div class="checks">
+      <label><input type="checkbox" id="vless" checked> vless reality xhttp</label>
+      <label><input type="checkbox" id="hysteria2" checked> hysteria2 gecko</label>
+      <label><input type="checkbox" id="amneziawg" checked> amneziawg</label>
+      <label><input type="checkbox" id="mieru"> mieru</label>
+      <label><input type="checkbox" id="naive"> naiveproxy</label>
+      <label><input type="checkbox" id="olcrtc"> olcrtc</label>
+    </div>
+    <h2>3. ports</h2>
+    <div class="ports">
+      <label>vless<input id="portVless" value="443"></label>
+      <label>hy2<input id="portHy2" value="30000"></label>
+      <label>awg<input id="portAwg" value="39743"></label>
+      <label>mieru<input id="portMieru" value="444-448"></label>
+      <label>naive<input id="portNaive" value="8443"></label>
+    </div>
+    <details>
+      <summary>olcrtc cfg</summary>
+      <label>provider<input id="olcProvider" value="jitsi"></label>
+      <label>transport<input id="olcTransport" value="datachannel"></label>
+      <label>room<input id="olcRoom" placeholder="https://meet.egovm.ru/room"></label>
+    </details>
+    <div class="btn-row">
+      <button type="button" id="install" disabled>install selected</button>
+    </div>
+  </section>
+  <section class="panel panel-logs">
+    <div class="result-header">
+      <h2>status <span class="state" id="state">idle</span></h2>
+    </div>
+    <pre id="logs"></pre>
+  </section>
+  <section class="panel panel-result">
+    <div class="result-header">
+      <h2>client data</h2>
+      <button class="copy-btn" id="copyBtn">copy</button>
+    </div>
     <pre id="result">after install links and configs will be here</pre>
+    <div class="links">
+      <span>clients:</span>
+      <a href="https://github.com/ExclaveNetwork/Exclave/releases/" target="_blank">vless, mieru, naive, hy</a>
+      <a href="https://github.com/alananisimov/olcbox" target="_blank">olcrtc</a>
+      <a href="https://github.com/spkprsnts/WireTurn" target="_blank">olcrtc(alt)</a>
+      <a href="https://github.com/amnezia-vpn/amnezia-client/releases/tag/4.8.19.0" target="_blank">awg</a>
+    </div>
   </section>
 </main>`
 
-const ids = (name) => document.getElementById(name)
-const logs = ids('logs')
-const result = ids('result')
-const state = ids('state')
+const $ = (id) => document.getElementById(id)
+const logs = $('logs')
+const result = $('result')
+const state = $('state')
 let phase = 'init'
 
 function theme(t) {
   document.documentElement.dataset.theme = t
   localStorage.setItem('theme', t)
-  ids('old').className = t === 'old' ? 'active' : ''
-  ids('new').className = t === 'new' ? 'active' : ''
+  $('old').className = t === 'old' ? 'active' : ''
+  $('new').className = t === 'new' ? 'active' : ''
 }
 
 theme(localStorage.getItem('theme') || 'new')
-ids('old').onclick = () => theme('old')
-ids('new').onclick = () => theme('new')
+$('old').onclick = () => theme('old')
+$('new').onclick = () => theme('new')
 
 EventsOn('install:log', (line) => {
   logs.textContent += line + '\n'
@@ -96,54 +110,81 @@ EventsOn('install:done', (text) => {
 
 function req() {
   return {
-    host: ids('host').value.trim(),
-    sshPort: ids('sshPort').value.trim(),
-    user: ids('user').value.trim(),
-    password: ids('password').value,
-    domain: ids('domain').value.trim(),
-    email: ids('email').value.trim(),
-    sni: ids('sni').value.trim(),
+    host: $('host').value.trim(),
+    sshPort: $('sshPort').value.trim(),
+    user: $('user').value.trim(),
+    password: $('password').value,
+    domain: $('domain').value.trim(),
+    email: $('email').value.trim(),
+    sni: $('sni').value.trim(),
     protocols: {
-      vless: ids('vless').checked,
-      hysteria2: ids('hysteria2').checked,
-      amneziawg: ids('amneziawg').checked,
-      mieru: ids('mieru').checked,
-      naive: ids('naive').checked,
-      olcrtc: ids('olcrtc').checked
+      vless: $('vless').checked,
+      hysteria2: $('hysteria2').checked,
+      amneziawg: $('amneziawg').checked,
+      mieru: $('mieru').checked,
+      naive: $('naive').checked,
+      olcrtc: $('olcrtc').checked
     },
     ports: {
-      vless: ids('portVless').value.trim(),
-      hysteria2: ids('portHy2').value.trim(),
-      amneziawg: ids('portAwg').value.trim(),
-      mieru: ids('portMieru').value.trim(),
-      naive: ids('portNaive').value.trim()
+      vless: $('portVless').value.trim(),
+      hysteria2: $('portHy2').value.trim(),
+      amneziawg: $('portAwg').value.trim(),
+      mieru: $('portMieru').value.trim(),
+      naive: $('portNaive').value.trim()
     },
     olcrtc: {
-      provider: ids('olcProvider').value.trim(),
-      transport: ids('olcTransport').value.trim(),
-      room: ids('olcRoom').value.trim()
+      provider: $('olcProvider').value.trim(),
+      transport: $('olcTransport').value.trim(),
+      room: $('olcRoom').value.trim()
     }
   }
 }
 
-ids('install').disabled = true
+function fieldsOk() {
+  return $('host').value.trim() &&
+    $('password').value &&
+    $('domain').value.trim() &&
+    ($('vless').checked || $('hysteria2').checked || $('amneziawg').checked ||
+     $('mieru').checked || $('naive').checked || $('olcrtc').checked)
+}
 
-ids('test').onclick = async () => {
-  ids('update').disabled = true
-  ids('install').disabled = true
+function refresh() {
+  const ok = fieldsOk()
+  $('test').disabled = !ok
+  if (!ok || state.textContent !== 'ok') {
+    $('update').disabled = true
+    $('install').disabled = true
+    return
+  }
+  $('update').disabled = phase === 'updated'
+  $('install').disabled = phase !== 'updated'
+}
+
+function onFieldChange() {
+  phase = 'init'
+  state.textContent = 'idle'
+  refresh()
+}
+
+;['host','password','domain'].forEach(id => $(id).addEventListener('input', onFieldChange))
+;['vless','hysteria2','amneziawg','mieru','naive','olcrtc'].forEach(id => $(id).addEventListener('change', onFieldChange))
+
+$('test').onclick = async () => {
+  $('update').disabled = true
+  $('install').disabled = true
   state.textContent = 'testing ssh...'
   state.textContent = await TestSSH(req())
   if (state.textContent === 'ok') {
     if (phase === 'updated') {
-      ids('install').disabled = false
+      $('install').disabled = false
     } else {
-      ids('update').disabled = false
+      $('update').disabled = false
     }
   }
 }
 
-ids('update').onclick = async () => {
-  ids('update').disabled = true
+$('update').onclick = async () => {
+  $('update').disabled = true
   logs.textContent = ''
   state.textContent = 'updating & rebooting...'
   const r = await Update(req())
@@ -152,12 +193,11 @@ ids('update').onclick = async () => {
   state.textContent = 'rebooted, test ssh to continue'
 }
 
-ids('form').onsubmit = async (e) => {
-  e.preventDefault()
+$('install').onclick = async () => {
   logs.textContent = ''
   result.textContent = 'install running...'
   state.textContent = 'installing'
-  ids('install').disabled = true
+  $('install').disabled = true
   try {
     result.textContent = await Install(req())
     state.textContent = 'done'
@@ -165,6 +205,26 @@ ids('form').onsubmit = async (e) => {
     state.textContent = 'err'
     result.textContent = String(err)
   } finally {
-    ids('install').disabled = false
+    $('install').disabled = false
+  }
+}
+
+$('copyBtn').onclick = async () => {
+  try {
+    await navigator.clipboard.writeText(result.textContent)
+    $('copyBtn').textContent = 'copied!'
+    setTimeout(() => { $('copyBtn').textContent = 'copy' }, 1500)
+  } catch {
+    // fallback
+    const ta = document.createElement('textarea')
+    ta.value = result.textContent
+    ta.style.position = 'fixed'
+    ta.style.opacity = '0'
+    document.body.appendChild(ta)
+    ta.select()
+    document.execCommand('copy')
+    document.body.removeChild(ta)
+    $('copyBtn').textContent = 'copied!'
+    setTimeout(() => { $('copyBtn').textContent = 'copy' }, 1500)
   }
 }

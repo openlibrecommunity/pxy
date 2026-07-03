@@ -12,7 +12,7 @@ const indexHTML = `<!doctype html>
 </head>
 <body>
 <main>
-<div class="top-controls"><div><a href="#" id="theme-old">old</a> <a href="#" id="theme-new">new</a></div><div><a href="https://zarazaex.xyz">zarazaex</a> <a href="https://github.com/openlibrecommunity/pxy">source</a></div></div>
+<div class="top-controls"><div><a href="#" id="theme-old">old</a> <a href="#" id="theme-new">new</a></div><div><a href="#" id="back-link">back</a> <a href="https://zarazaex.xyz">zarazaex</a> <a href="https://github.com/openlibrecommunity/pxy">source</a></div></div>
 <section>
 <h1>pxy</h1>
 <p>one click dns for proxy servers</p>
@@ -46,6 +46,7 @@ function zeros(h){let n=0;for(const c of h){let v=parseInt(c,16);if(v===0){n+=4;
 async function sha(s){return hex(await crypto.subtle.digest('SHA-256',enc.encode(s)))}
 async function solve(ch,ip,fqdn,bits){for(let i=0;;i++){if(i%5000===0)out.textContent='pow: '+i+' tries';let h=await sha(ch+':'+ip+':'+fqdn+':'+i);if(zeros(h)>=bits)return String(i)}}
 $('rnd').onclick=()=>{$('sub').value=rnd()}
+$('back-link').onclick=e=>{e.preventDefault();history.back()}
 $('f').onsubmit=async e=>{e.preventDefault();go.disabled=true;try{let ip=$('ip').value.trim();let sub=clean($('sub').value.trim());let fqdn=sub+'.'+$('zone').value;out.textContent='challenge for '+fqdn;let r=await fetch('/challenge?ip='+encodeURIComponent(ip)+'&fqdn='+encodeURIComponent(fqdn));if(!r.ok)throw new Error(await r.text());let c=await r.json();let sol=await solve(c.challenge,ip,fqdn,c.bits);out.textContent='submitting solution '+sol;let fd=new FormData();fd.set('ip',ip);fd.set('fqdn',fqdn);fd.set('challenge',c.challenge);fd.set('solution',sol);let cr=await fetch('/create',{method:'POST',body:fd});out.textContent=await cr.text();if(!cr.ok)throw new Error(out.textContent)}catch(err){out.textContent='error: '+err.message}finally{go.disabled=false}}
 </script>
 </body>
