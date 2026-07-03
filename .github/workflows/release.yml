@@ -54,24 +54,3 @@ jobs:
             dist/pxy-cli-linux
             dist/SHA256SUMS
 
-  macos:
-    needs: [release]
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: '1.26'
-          check-latest: true
-      - name: install wails
-        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
-      - name: build
-        run: |
-          wails build -platform darwin/amd64
-          mv build/bin/pxy pxy-macos
-          sha256sum pxy-macos > pxy-macos.sha256
-      - uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            pxy-macos
-            pxy-macos.sha256
