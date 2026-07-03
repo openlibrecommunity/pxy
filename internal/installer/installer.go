@@ -290,10 +290,14 @@ func naiveBlock() string {
 	return `
 log 'pxy: install naiveproxy caddy'
 if ! command -v go >/dev/null; then
-  echo 'deb http://deb.debian.org/debian/ testing main non-free-firmware' >/etc/apt/sources.list.d/testing.list
-  printf 'Package: *\nPin: release a=testing\nPin-Priority: 100\n' >/etc/apt/preferences.d/testing-pin
-  apt-get update -y
-  apt-get install -y -t testing golang-go
+  if grep -qi ubuntu /etc/os-release 2>/dev/null; then
+    apt-get install -y golang-go
+  else
+    echo 'deb http://deb.debian.org/debian/ testing main non-free-firmware' >/etc/apt/sources.list.d/testing.list
+    printf 'Package: *\nPin: release a=testing\nPin-Priority: 100\n' >/etc/apt/preferences.d/testing-pin
+    apt-get update -y
+    apt-get install -y -t testing golang-go
+  fi
 fi
 export PATH="$HOME/go/bin:$PATH"
 go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest
@@ -349,10 +353,14 @@ if [ "$MEM_MB" -lt 4096 ]; then
   fallocate -l 4G /swapfile 2>/dev/null && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
 fi
 if ! command -v go >/dev/null; then
-  echo 'deb http://deb.debian.org/debian/ testing main non-free-firmware' >/etc/apt/sources.list.d/testing.list
-  printf 'Package: *\nPin: release a=testing\nPin-Priority: 100\n' >/etc/apt/preferences.d/testing-pin
-  apt-get update -y
-  apt-get install -y -t testing golang-go
+  if grep -qi ubuntu /etc/os-release 2>/dev/null; then
+    apt-get install -y golang-go
+  else
+    echo 'deb http://deb.debian.org/debian/ testing main non-free-firmware' >/etc/apt/sources.list.d/testing.list
+    printf 'Package: *\nPin: release a=testing\nPin-Priority: 100\n' >/etc/apt/preferences.d/testing-pin
+    apt-get update -y
+    apt-get install -y -t testing golang-go
+  fi
 fi
 export PATH="$HOME/go/bin:$PATH"
 go install github.com/magefile/mage@latest
