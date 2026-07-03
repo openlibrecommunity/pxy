@@ -93,19 +93,6 @@ func (a *App) Install(req installer.Request) (string, error) {
 	return res, nil
 }
 
-// ServerTop returns top output for htop toggle.
-func (a *App) ServerTop(req installer.Request) string {
-	req.Defaults()
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
-	client := pxyssh.New(req.Host, req.SSHPort, req.User, req.Password)
-	out, err := client.Run(ctx, "top -b -n 1 2>/dev/null | head -30", nil)
-	if err != nil {
-		return "err: " + err.Error()
-	}
-	return out
-}
-
 func (a *App) begin() bool {
 	a.mu.Lock()
 	defer a.mu.Unlock()

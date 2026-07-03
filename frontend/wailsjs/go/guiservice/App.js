@@ -14,6 +14,4 @@ export function Update(arg1) {
   return window['go']['guiservice']['App']['Update'](arg1);
 }
 
-export function ServerTop(arg1) {
-  return window['go']['guiservice']['App']['ServerTop'](arg1);
-}
+
