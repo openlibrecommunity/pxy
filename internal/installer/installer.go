@@ -212,17 +212,18 @@ res "mieru client json: {\"profiles\":[{\"profileName\":\"pxy\",\"user\":{\"name
 func awgBlock() string {
 	return `
 log 'pxy: install amneziawg'
-pkg gpg sudo ethtool build-essential dkms dpkg-dev qrencode wireguard-tools linux-headers-$(uname -r)
-git clone --depth 1 https://github.com/amnezia-vpn/amneziawg-tools /root/awg-tools
-make -C /root/awg-tools/src WITH_WGQUICK=yes WITH_SYSTEMDUNITS=yes install
-rm -rf /root/awg-tools
-git clone --depth 1 https://github.com/amnezia-vpn/amneziawg-linux-kernel-module /root/awg-mod
-cd /root/awg-mod/src
-make && make install
-depmod -a
-modprobe amneziawg || true
-cd /root
-rm -rf /root/awg-mod
+if ! command -v awg >/dev/null; then
+  pkg gpg sudo ethtool build-essential dkms dpkg-dev qrencode wireguard-tools linux-headers-$(uname -r)
+  git clone --depth 1 https://github.com/amnezia-vpn/amneziawg-tools /root/awg-tools
+  make -C /root/awg-tools/src WITH_WGQUICK=yes WITH_SYSTEMDUNITS=yes install
+  rm -rf /root/awg-tools
+  git clone --depth 1 https://github.com/amnezia-vpn/amneziawg-linux-kernel-module /root/awg-mod
+  make -C /root/awg-mod/src && make -C /root/awg-mod/src install
+  depmod -a
+  modprobe amneziawg || true
+  rm -rf /root/awg-mod
+  systemctl daemon-reload
+fi
 mkdir -p /etc/amnezia/amneziawg /root/pxy/awg
 SRV_PRIV=$(awg genkey)
 SRV_PUB=$(printf '%s' "$SRV_PRIV" | awg pubkey)
