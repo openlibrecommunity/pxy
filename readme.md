@@ -2,7 +2,7 @@
 
 <div align="center">
 
-# **pxy - one click server bypass installer + free domains for bypass**
+# **pxy - one click 6 proxy installer + free domains**
 
 ### **how to start**
 
@@ -22,8 +22,8 @@
 </div>
 
 ```sh
-  go build -o pxy . && ./pxy                     # linux
-  GOOS=windows GOARCH=amd64 go build -o pxy.exe . # windows cross
+  go install github.com/wailsapp/wails/v2/cmd/wails@latest # install wails                     # linux
+  wails build # wails build -tags webkit2_41 - is use webkit2-41
 ```
 
 <div align="center">
