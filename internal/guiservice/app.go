@@ -50,10 +50,12 @@ func (a *App) Update(req installer.Request) string {
 	log := func(line string) { a.emit("install:log", line) }
 	log("connect " + req.User + "@" + req.Host + ":" + req.SSHPort)
 	client := pxyssh.New(req.Host, req.SSHPort, req.User, req.Password)
-	out, err := client.Run(context.Background(),
-		"DEBIAN_FRONTEND=noninteractive apt-get update -y && apt-get upgrade -y && sync && reboot", log)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancel()
+	prep := "rm -f /var/lib/dpkg/lock-frontend /var/lib/apt/lists/lock /var/cache/apt/archives/lock /var/lib/dpkg/lock 2>/dev/null; fuser -sk /var/lib/dpkg/lock-frontend 2>/dev/null || true"
+	cmd := prep + "; DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=120 update -y && DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=120 install -y htop && DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=120 upgrade -y && sync && reboot"
+	out, err := client.Run(ctx, cmd, log)
 	if err != nil {
-		// reboot closes ssh, which is expected
 		out += "\nreboot initiated"
 	}
 	return "ok\n" + out
@@ -89,6 +91,19 @@ func (a *App) Install(req installer.Request) (string, error) {
 	}
 	a.emit("install:done", res)
 	return res, nil
+}
+
+// ServerTop returns top output for htop toggle.
+func (a *App) ServerTop(req installer.Request) string {
+	req.Defaults()
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	client := pxyssh.New(req.Host, req.SSHPort, req.User, req.Password)
+	out, err := client.Run(ctx, "top -b -n 1 2>/dev/null | head -30", nil)
+	if err != nil {
+		return "err: " + err.Error()
+	}
+	return out
 }
 
 func (a *App) begin() bool {
