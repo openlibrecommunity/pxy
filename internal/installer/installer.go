@@ -215,15 +215,11 @@ func awgBlock() string {
 log 'pxy: install amneziawg'
 if ! command -v awg >/dev/null; then
   pkg gpg sudo ethtool build-essential dkms dpkg-dev qrencode wireguard-tools linux-headers-$(uname -r)
-  git clone --depth 1 https://github.com/amnezia-vpn/amneziawg-tools /root/awg-tools
-  make -C /root/awg-tools/src WITH_WGQUICK=yes WITH_SYSTEMDUNITS=yes install
-  rm -rf /root/awg-tools
-  git clone --depth 1 https://github.com/amnezia-vpn/amneziawg-linux-kernel-module /root/awg-mod
-  make -C /root/awg-mod/src && make -C /root/awg-mod/src install
-  depmod -a
+  curl -fsSL 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x75C9DD72C799870E310542E24166F2C257290828' | gpg --dearmor >/usr/share/keyrings/amnezia.gpg
+  echo 'deb [signed-by=/usr/share/keyrings/amnezia.gpg] https://ppa.launchpadcontent.net/amnezia/ppa/ubuntu noble main' >/etc/apt/sources.list.d/amnezia.list
+  apt-get update -y
+  apt-get install -y amneziawg-dkms amneziawg-tools
   modprobe amneziawg || true
-  rm -rf /root/awg-mod
-  systemctl daemon-reload
 fi
 mkdir -p /etc/amnezia/amneziawg /root/pxy/awg
 SRV_PRIV=$(awg genkey)
@@ -301,6 +297,7 @@ export PATH="$HOME/go/bin:$PATH"
 go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest
 /root/go/bin/xcaddy build --with github.com/caddyserver/forwardproxy@caddy2=github.com/klzgrad/forwardproxy@naive
 install -m 0755 caddy /usr/bin/caddy
+setcap cap_net_bind_service=+ep /usr/bin/caddy 2>/dev/null || true
 NAIVE_USER=pxy$(randhex 2)
 NAIVE_PASS=$(randhex 5)
 mkdir -p /etc/caddy
@@ -345,6 +342,10 @@ res "naive+https://$NAIVE_USER:$NAIVE_PASS@$DOMAIN:$NAIVE_PORT#pxy-naive"
 func olcrtcBlock() string {
 	return `
 log 'pxy: install olcrtc'
+MEM_MB=$(free -m | awk '/^Mem:/ {print $2}')
+if [ "$MEM_MB" -lt 4096 ]; then
+  fallocate -l 4G /swapfile 2>/dev/null && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
+fi
 if ! command -v go >/dev/null; then
   echo 'deb http://deb.debian.org/debian/ testing main non-free-firmware' >/etc/apt/sources.list.d/testing.list
   printf 'Package: *\nPin: release a=testing\nPin-Priority: 100\n' >/etc/apt/preferences.d/testing-pin
@@ -370,6 +371,10 @@ crypto:
 net:
   transport: $OLC_TRANSPORT
   dns: "8.8.8.8:53"
+liveness:
+  interval: 10s
+  timeout: 5s
+  failures: 3
 data: data
 debug: false
 EOF
@@ -378,10 +383,12 @@ cat > /etc/systemd/system/olcrtc.service <<EOF
 Description=olcrtc server
 After=network-online.target
 [Service]
+Type=simple
 WorkingDirectory=/root/pj/olcrtc
 ExecStart=/root/pj/olcrtc/build/olcrtc-linux-amd64 /root/.config/olcrtc/server.yaml
 Restart=always
 RestartSec=5s
+LimitNOFILE=1048576
 [Install]
 WantedBy=multi-user.target
 EOF
