@@ -9,3 +9,11 @@ export function Install(arg1) {
 export function TestSSH(arg1) {
   return window['go']['guiservice']['App']['TestSSH'](arg1);
 }
+
+export function Update(arg1) {
+  return window['go']['guiservice']['App']['Update'](arg1);
+}
+
+export function ServerTop(arg1) {
+  return window['go']['guiservice']['App']['ServerTop'](arg1);
+}

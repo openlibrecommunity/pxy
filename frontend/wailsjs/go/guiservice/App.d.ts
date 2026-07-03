@@ -5,3 +5,7 @@ import {installer} from '../models';
 export function Install(arg1:installer.Request):Promise<string>;
 
 export function TestSSH(arg1:installer.Request):Promise<string>;
+
+export function Update(arg1:installer.Request):Promise<string>;
+
+export function ServerTop(arg1:installer.Request):Promise<string>;

@@ -1,5 +1,5 @@
 import './style.css'
-import { Install, TestSSH, Update } from '../wailsjs/go/guiservice/App'
+import { Install, TestSSH, Update, ServerTop } from '../wailsjs/go/guiservice/App'
 import { EventsOn } from '../wailsjs/runtime/runtime'
 
 const app = document.querySelector('#app')
@@ -63,6 +63,7 @@ app.innerHTML = `
   <section class="panel panel-logs">
     <div class="result-header">
       <h2>status <span class="state" id="state">idle</span></h2>
+      <button class="copy-btn" id="htopToggle">htop</button>
     </div>
     <pre id="logs"></pre>
   </section>
@@ -207,6 +208,31 @@ $('install').onclick = async () => {
   } finally {
     $('install').disabled = false
   }
+}
+
+let htopMode = false
+let htopTimer = null
+
+$('htopToggle').onclick = () => {
+  htopMode = !htopMode
+  $('htopToggle').textContent = htopMode ? 'logs' : 'htop'
+  $('htopToggle').className = htopMode ? 'copy-btn active' : 'copy-btn'
+  if (htopMode) {
+    logs.textContent = 'loading...'
+    tick()
+    htopTimer = setInterval(tick, 3000)
+  } else {
+    if (htopTimer) { clearInterval(htopTimer); htopTimer = null }
+    logs.textContent = ''
+  }
+}
+
+async function tick() {
+  if (!htopMode) return
+  try {
+    logs.textContent = await ServerTop(req())
+    logs.scrollTop = 0
+  } catch { logs.textContent = 'err: connection failed' }
 }
 
 $('copyBtn').onclick = async () => {
