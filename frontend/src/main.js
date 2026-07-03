@@ -234,26 +234,28 @@ function refresh() {
   $('install').disabled = phase !== 'updated'
 }
 
-function onFieldChange() {
+function onCriticalChange() {
   phase = 'init'
   state.textContent = 'idle'
   refresh()
 }
 
-;['host','password','domain'].forEach(id => $(id).addEventListener('input', onFieldChange))
-;['vless','hysteria2','amneziawg','mieru','naive','olcrtc'].forEach(id => $(id).addEventListener('change', onFieldChange))
+function onMinorChange() {
+  refresh()
+}
+
+;['host','password','domain'].forEach(id => $(id).addEventListener('input', onCriticalChange))
+;['vless','hysteria2','amneziawg','mieru','naive','olcrtc'].forEach(id => $(id).addEventListener('change', onMinorChange))
 
 $('test').onclick = async () => {
   $('update').disabled = true
   $('install').disabled = true
   state.textContent = 'testing ssh...'
   state.textContent = await TestSSH(req())
-  if (state.textContent === 'ok') {
-    if (phase === 'updated') {
-      $('install').disabled = false
-    } else {
-      $('update').disabled = false
-    }
+  if (state.textContent === 'ok' && phase === 'updated') {
+    $('install').disabled = false
+  } else if (state.textContent === 'ok') {
+    $('update').disabled = false
   }
 }
 
