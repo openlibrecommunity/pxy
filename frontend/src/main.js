@@ -1,6 +1,6 @@
 import './style.css'
 import { Install, TestSSH, Update } from '../wailsjs/go/guiservice/App'
-import { EventsOn } from '../wailsjs/runtime/runtime'
+import { EventsOn, BrowserOpenURL, ClipboardSetText } from '../wailsjs/runtime/runtime'
 
 const app = document.querySelector('#app')
 
@@ -69,24 +69,30 @@ app.innerHTML = `
   <section class="panel panel-result">
     <div class="result-header">
       <h2>client data</h2>
-      <button class="copy-btn" id="copyBtn">copy</button>
+      <button class="copy-btn" id="copyBtn">copy all</button>
     </div>
-    <pre id="result">after install links and configs will be here</pre>
+    <div id="configs"><p class="muted">after install links and configs will be here</p></div>
     <div class="links">
       <span>clients:</span>
-      <a href="https://github.com/ExclaveNetwork/Exclave/releases/" target="_blank">vless, mieru, naive, hy</a>
-      <a href="https://github.com/alananisimov/olcbox" target="_blank">olcrtc</a>
-      <a href="https://github.com/spkprsnts/WireTurn" target="_blank">olcrtc(alt)</a>
-      <a href="https://github.com/amnezia-vpn/amnezia-client/releases/tag/4.8.19.0" target="_blank">awg</a>
+      <a href="#" id="link-exclave">vless, mieru, naive, hy</a>
+      <a href="#" id="link-olcbox">olcrtc</a>
+      <a href="#" id="link-wt">olcrtc(alt)</a>
+      <a href="#" id="link-awg">awg</a>
     </div>
   </section>
 </main>`
 
 const $ = (id) => document.getElementById(id)
 const logs = $('logs')
-const result = $('result')
+const configs = $('configs')
 const state = $('state')
 let phase = 'init'
+let lastResult = ''
+
+$('link-exclave').onclick = (e) => { e.preventDefault(); BrowserOpenURL('https://github.com/ExclaveNetwork/Exclave/releases/') }
+$('link-olcbox').onclick = (e) => { e.preventDefault(); BrowserOpenURL('https://github.com/alananisimov/olcbox') }
+$('link-wt').onclick = (e) => { e.preventDefault(); BrowserOpenURL('https://github.com/spkprsnts/WireTurn') }
+$('link-awg').onclick = (e) => { e.preventDefault(); BrowserOpenURL('https://github.com/amnezia-vpn/amnezia-client/releases/tag/4.8.19.0') }
 
 function theme(t) {
   document.documentElement.dataset.theme = t
@@ -105,8 +111,76 @@ EventsOn('install:log', (line) => {
 })
 
 EventsOn('install:done', (text) => {
-  result.textContent = text
+  showConfigs(text)
 })
+
+function showConfigs(text) {
+  lastResult = text
+  const parsed = parseConfigs(text)
+  configs.innerHTML = ''
+  if (parsed.length === 0) {
+    configs.innerHTML = '<pre class="c-fallback">' + esc(text) + '</pre>'
+    return
+  }
+  for (const c of parsed) {
+    const row = document.createElement('div')
+    row.className = 'c-row'
+    const badge = document.createElement('span')
+    badge.className = 'c-badge'
+    badge.textContent = c.type
+    const code = document.createElement('code')
+    code.className = 'c-text'
+    code.textContent = c.label.length > 80 ? c.label.slice(0, 77) + '...' : c.label
+    const btn = document.createElement('button')
+    btn.className = 'c-copy'
+    btn.textContent = 'copy'
+    btn.onclick = () => {
+      ClipboardSetText(c.copy)
+      btn.textContent = 'copied!'
+      setTimeout(() => { btn.textContent = 'copy' }, 1200)
+    }
+    row.appendChild(badge)
+    row.appendChild(code)
+    row.appendChild(btn)
+    configs.appendChild(row)
+  }
+}
+
+function parseConfigs(text) {
+  const lines = text.split('\n')
+  const res = []
+  let i = 0
+  while (i < lines.length) {
+    const l = lines[i].trim()
+    if (!l) { i++; continue }
+    if (l.startsWith('vless://')) {
+      res.push({ type: 'vless', label: l, copy: l })
+    } else if (l.startsWith('hysteria2://')) {
+      res.push({ type: 'hy2', label: l, copy: l })
+    } else if (l.startsWith('mieru tcp')) {
+      res.push({ type: 'mieru', label: l, copy: l })
+    } else if (l.startsWith('mieru client json:')) {
+      res.push({ type: 'mieru-json', label: 'mieru client config', copy: l.replace('mieru client json: ', '') })
+    } else if (l === 'amneziawg config:' || l.startsWith('amneziawg config:')) {
+      i++; let awg = []
+      while (i < lines.length && lines[i].trim() && !lines[i].includes('://') && !lines[i].startsWith('mieru')) {
+        awg.push(lines[i]); i++
+      }
+      res.push({ type: 'awg', label: 'amneziawg config (' + awg.length + ' lines)', copy: awg.join('\n') })
+      continue
+    } else if (l.startsWith('naive+https://')) {
+      res.push({ type: 'naive', label: l, copy: l })
+    } else if (l.startsWith('olcrtc://')) {
+      res.push({ type: 'olcrtc', label: l, copy: l })
+    }
+    i++
+  }
+  return res
+}
+
+function esc(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
 
 function req() {
   return {
@@ -195,36 +269,24 @@ $('update').onclick = async () => {
 
 $('install').onclick = async () => {
   logs.textContent = ''
-  result.textContent = 'install running...'
+  configs.innerHTML = '<p class="muted">install running...</p>'
   state.textContent = 'installing'
   $('install').disabled = true
   try {
-    result.textContent = await Install(req())
+    const text = await Install(req())
+    showConfigs(text)
     state.textContent = 'done'
   } catch (err) {
     state.textContent = 'err'
-    result.textContent = String(err)
+    configs.innerHTML = '<pre class="c-fallback">' + esc(String(err)) + '</pre>'
   } finally {
     $('install').disabled = false
   }
 }
 
 $('copyBtn').onclick = async () => {
-  try {
-    await navigator.clipboard.writeText(result.textContent)
-    $('copyBtn').textContent = 'copied!'
-    setTimeout(() => { $('copyBtn').textContent = 'copy' }, 1500)
-  } catch {
-    // fallback
-    const ta = document.createElement('textarea')
-    ta.value = result.textContent
-    ta.style.position = 'fixed'
-    ta.style.opacity = '0'
-    document.body.appendChild(ta)
-    ta.select()
-    document.execCommand('copy')
-    document.body.removeChild(ta)
-    $('copyBtn').textContent = 'copied!'
-    setTimeout(() => { $('copyBtn').textContent = 'copy' }, 1500)
-  }
+  if (!lastResult) return
+  ClipboardSetText(lastResult)
+  $('copyBtn').textContent = 'copied!'
+  setTimeout(() => { $('copyBtn').textContent = 'copy all' }, 1200)
 }
