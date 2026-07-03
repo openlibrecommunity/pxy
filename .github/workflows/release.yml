@@ -29,8 +29,6 @@ jobs:
           mkdir -p dist
           wails build -tags webkit2_41 -platform linux/amd64
           mv build/bin/pxy dist/pxy-linux
-          wails build -tags webkit2_41 -platform linux/amd64 -appimage
-          mv build/bin/*.AppImage dist/pxy.appimage
           CC=x86_64-w64-mingw32-gcc wails build -platform windows/amd64
           mv build/bin/pxy.exe dist/pxy.exe
           CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o dist/pxy-cli-linux ./cmd/pxy
@@ -51,7 +49,6 @@ jobs:
           body_path: notes.md
           files: |
             dist/pxy-linux
-            dist/pxy.appimage
             dist/pxy.exe
             dist/pxy-cli-linux
             dist/SHA256SUMS
