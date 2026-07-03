@@ -1,0 +1,79 @@
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+          check-latest: true
+      - name: install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libglib2.0-dev libwebkit2gtk-4.1-dev gcc-mingw-w64-x86-64
+      - name: install wails
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+      - name: build
+        run: |
+          mkdir -p dist
+          wails build -tags webkit2_41 -platform linux/amd64
+          mv build/bin/pxy dist/pxy-linux
+          wails build -tags webkit2_41 -platform linux/amd64 -appimage
+          mv build/bin/*.AppImage dist/pxy.appimage
+          CC=x86_64-w64-mingw32-gcc wails build -platform windows/amd64
+          mv build/bin/pxy.exe dist/pxy.exe
+          CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o dist/pxy-cli-linux ./cmd/pxy
+          ( cd dist && sha256sum * > SHA256SUMS )
+      - name: notes
+        run: |
+          prev=$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || true)
+          {
+            echo "# changes in release:"; echo
+            if [ -n "$prev" ]; then
+              git log --no-merges --pretty='%s' "${prev}..${GITHUB_REF_NAME}"
+            else
+              git log --no-merges --pretty='%s' "${GITHUB_REF_NAME}"
+            fi
+          } > notes.md
+      - uses: softprops/action-gh-release@v2
+        with:
+          body_path: notes.md
+          files: |
+            dist/pxy-linux
+            dist/pxy.appimage
+            dist/pxy.exe
+            dist/pxy-cli-linux
+            dist/SHA256SUMS
+
+  macos:
+    needs: [release]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+          check-latest: true
+      - name: install wails
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+      - name: build
+        run: |
+          wails build -platform darwin/amd64
+          mv build/bin/pxy pxy-macos
+          sha256sum pxy-macos > pxy-macos.sha256
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            pxy-macos
+            pxy-macos.sha256
