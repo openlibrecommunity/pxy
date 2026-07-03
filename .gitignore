@@ -3,3 +3,6 @@ AGENTS.md
 .domains
 log/
 bin/
+frontend/node_modules/
+frontend/dist/
+build/
