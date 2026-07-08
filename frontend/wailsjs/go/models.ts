@@ -66,6 +66,7 @@ export namespace installer {
 	    domain: string;
 	    email: string;
 	    sni: string;
+	    hy2Obfs: string;
 	    protocols: Protocols;
 	    ports: Ports;
 	    olcrtc: OLCRTC;
@@ -83,6 +84,7 @@ export namespace installer {
 	        this.domain = source["domain"];
 	        this.email = source["email"];
 	        this.sni = source["sni"];
+	        this.hy2Obfs = source["hy2Obfs"];
 	        this.protocols = this.convertValues(source["protocols"], Protocols);
 	        this.ports = this.convertValues(source["ports"], Ports);
 	        this.olcrtc = this.convertValues(source["olcrtc"], OLCRTC);

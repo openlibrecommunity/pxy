@@ -36,12 +36,16 @@ app.innerHTML = `
     <h2>2. protocols</h2>
     <div class="checks">
       <label><input type="checkbox" id="vless" checked> vless reality xhttp</label>
-      <label><input type="checkbox" id="hysteria2" checked> hysteria2 gecko</label>
+      <label><input type="checkbox" id="hysteria2" checked> hysteria2</label>
       <label><input type="checkbox" id="amneziawg" checked> amneziawg</label>
       <label><input type="checkbox" id="mieru"> mieru</label>
       <label><input type="checkbox" id="naive"> naiveproxy</label>
       <label><input type="checkbox" id="olcrtc"> olcrtc</label>
     </div>
+    <label>hy2 obfs<select id="hy2Obfs">
+      <option value="salamander">salamander</option>
+      <option value="gecko">gecko</option>
+    </select></label>
     <h2>3. ports</h2>
     <div class="ports">
       <label>vless<input id="portVless" value="443"></label>
@@ -191,6 +195,7 @@ function req() {
     domain: $('domain').value.trim(),
     email: $('email').value.trim(),
     sni: $('sni').value.trim(),
+    hy2Obfs: $('hy2Obfs').value,
     protocols: {
       vless: $('vless').checked,
       hysteria2: $('hysteria2').checked,

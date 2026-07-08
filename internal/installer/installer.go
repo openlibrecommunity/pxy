@@ -14,6 +14,7 @@ type Request struct {
 	Domain    string    `json:"domain"`
 	Email     string    `json:"email"`
 	SNI       string    `json:"sni"`
+	Hy2Obfs   string    `json:"hy2Obfs"`
 	Protocols Protocols `json:"protocols"`
 	Ports     Ports     `json:"ports"`
 	OLCRTC    OLCRTC    `json:"olcrtc"`
@@ -58,6 +59,9 @@ func (r *Request) Defaults() {
 	}
 	if r.SNI == "" {
 		r.SNI = "www.microsoft.com"
+	}
+	if r.Hy2Obfs != "salamander" && r.Hy2Obfs != "gecko" {
+		r.Hy2Obfs = "salamander"
 	}
 	if r.Ports.VLESS == "" {
 		r.Ports.VLESS = "443"
@@ -108,6 +112,7 @@ func Script(req Request) string {
 	if req.Protocols.OLCRTC {
 		b.WriteString(olcrtcBlock())
 	}
+	b.WriteString(ufwBlock(req))
 	b.WriteString("echo PXYSTARTRESULT\ncat /root/pxy/result.txt\n")
 	return b.String()
 }
@@ -127,6 +132,7 @@ HY2_PORT=%s
 MIERU_PORT=%s
 AWG_PORT=%s
 NAIVE_PORT=%s
+HY2_OBFS=%s
 OLC_PROVIDER=%s
 OLC_TRANSPORT=%s
 OLC_ROOM=%s
@@ -136,8 +142,8 @@ randhex(){ openssl rand -hex "$1"; }
 pkg(){ apt-get update -y; apt-get install -y "$@"; }
 rm -f /etc/apt/sources.list.d/amnezia.list /etc/apt/sources.list.d/testing.list /usr/share/keyrings/amnezia.gpg
 log 'pxy: base packages'
-pkg curl wget unzip openssl git ca-certificates python3
-`, shq(req.Domain), shq(req.Host), shq(req.Email), shq(req.SNI), shq(req.Ports.VLESS), shq(req.Ports.Hysteria2), shq(req.Ports.Mieru), shq(req.Ports.AmneziaWG), shq(req.Ports.Naive), shq(req.OLCRTC.Provider), shq(req.OLCRTC.Transport), shq(req.OLCRTC.Room))
+pkg curl wget unzip openssl git ca-certificates python3 iptables
+`, shq(req.Domain), shq(req.Host), shq(req.Email), shq(req.SNI), shq(req.Ports.VLESS), shq(req.Ports.Hysteria2), shq(req.Ports.Mieru), shq(req.Ports.AmneziaWG), shq(req.Ports.Naive), shq(req.Hy2Obfs), shq(req.OLCRTC.Provider), shq(req.OLCRTC.Transport), shq(req.OLCRTC.Room))
 }
 
 func vlessBlock() string {
@@ -174,8 +180,8 @@ auth:
   type: password
   password: $HY_PASS
 obfs:
-  type: gecko
-  gecko:
+  type: $HY2_OBFS
+  $HY2_OBFS:
     password: $HY_OBFS
 masquerade:
   type: proxy
@@ -185,7 +191,7 @@ masquerade:
 EOF
 systemctl enable --now hysteria-server
 systemctl restart hysteria-server
-res "hysteria2://$HY_PASS@$DOMAIN:$HY2_PORT/?obfs=gecko&obfs-password=$HY_OBFS#pxy-hy2"
+res "hysteria2://$HY_PASS@$DOMAIN:$HY2_PORT/?obfs=$HY2_OBFS&obfs-password=$HY_OBFS#pxy-hy2"
 `
 }
 
@@ -409,6 +415,36 @@ systemctl daemon-reload
 systemctl enable --now olcrtc
 res "olcrtc://$OLC_PROVIDER?$OLC_TRANSPORT@$OLC_ROOM#$OLC_KEY\$pxy-olcrtc"
 `
+}
+
+func ufwBlock(req Request) string {
+	var b strings.Builder
+	b.WriteString(`
+log 'pxy: configure ufw'
+DEBIAN_FRONTEND=noninteractive apt-get install -y ufw
+ufwport(){ ufw allow "$(printf '%s' "$1" | tr - :)/$2" >/dev/null; }
+ufw --force reset >/dev/null
+ufw default deny incoming >/dev/null
+ufw default allow outgoing >/dev/null
+ufw allow ` + shq(req.SSHPort) + `/tcp >/dev/null
+`)
+	if req.Protocols.VLESS {
+		fmt.Fprintf(&b, "ufwport %s tcp\n", shq(req.Ports.VLESS))
+	}
+	if req.Protocols.Hysteria2 {
+		fmt.Fprintf(&b, "ufwport %s udp\nufwport 80 tcp\n", shq(req.Ports.Hysteria2))
+	}
+	if req.Protocols.Mieru {
+		fmt.Fprintf(&b, "ufwport %s tcp\n", shq(req.Ports.Mieru))
+	}
+	if req.Protocols.AmneziaWG {
+		fmt.Fprintf(&b, "ufwport %s udp\nsed -i 's/DEFAULT_FORWARD_POLICY=\"DROP\"/DEFAULT_FORWARD_POLICY=\"ACCEPT\"/' /etc/default/ufw\n", shq(req.Ports.AmneziaWG))
+	}
+	if req.Protocols.Naive {
+		fmt.Fprintf(&b, "ufwport %s tcp\nufwport 80 tcp\n", shq(req.Ports.Naive))
+	}
+	b.WriteString("ufw --force enable >/dev/null\nlog 'pxy: ufw enabled'\n")
+	return b.String()
 }
 
 func shq(s string) string { return "'" + strings.ReplaceAll(s, "'", "'\\''") + "'" }
