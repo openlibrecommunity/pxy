@@ -20,5 +20,21 @@ pkgs.mkShell {
 
   shellHook = ''
     export CGO_ENABLED=1
+    # Wails expects webkit2gtk-4.0; nixpkgs provides 4.1. Alias the pkg-config entry.
+    pc_dir="$HOME/.cache/pxy-pkgconfig"
+    mkdir -p "$pc_dir"
+    cat > "$pc_dir/webkit2gtk-4.0.pc" <<'EOF'
+Name: webkit2gtk-4.0
+Description: Alias to webkit2gtk-4.1 (nixpkgs ships 4.1 only)
+Version: 4.0.0
+Requires: webkit2gtk-4.1
+EOF
+    cat > "$pc_dir/webkit2gtk-web-extension-4.0.pc" <<'EOF'
+Name: webkit2gtk-web-extension-4.0
+Description: Alias to webkit2gtk-web-extension-4.1 (nixpkgs ships 4.1 only)
+Version: 4.0.0
+Requires: webkit2gtk-web-extension-4.1
+EOF
+    export PKG_CONFIG_PATH="$pc_dir''${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
   '';
 }
