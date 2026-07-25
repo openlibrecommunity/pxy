@@ -6,3 +6,4 @@ bin/
 frontend/node_modules/
 frontend/dist/
 build/
+.opencode

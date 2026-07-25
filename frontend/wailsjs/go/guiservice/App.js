@@ -13,5 +13,3 @@ export function TestSSH(arg1) {
 export function Update(arg1) {
   return window['go']['guiservice']['App']['Update'](arg1);
 }
-
-
